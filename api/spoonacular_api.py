@@ -62,3 +62,12 @@ def find_recipes_by_ingredients(ingredients_list):
         if recipes:
             return recipes[0]
     return None
+
+def get_recipe_instructions(recipe_id):
+    url = f"https://api.spoonacular.com/recipes/{recipe_id}/analyzedInstructions"
+    params = {"apiKey": SPOONACULAR_KEY}
+    response = requests.get(url, params=params)
+    if response.status_code == 200:
+        instructions = response.json()[0]["steps"]
+        return "\n".join([step["step"] for step in instructions])
+    return None
