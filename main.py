@@ -1,7 +1,8 @@
 from database.database import create_table
 from database.database import add_ingredient
 from database.database import view_pantry
-from api.spoonacular_api import get_nutrition
+from api.spoonacular_api import get_nutrition, find_recipes_by_ingredients, get_recipe_instructions
+from api.gemini_api import generate_recipe_from_pantry
 
 create_table()
 
@@ -12,7 +13,8 @@ def menu():
     print("1. Add Ingredient")
     print("2. View Pantry")
     print("3. See Nutrition Facts")
-    print("4. Close")
+    print("4. Generate Recipe")
+    print("5. Close")
 
 def nutrition_menu():
     pantry_items = view_pantry()
@@ -52,6 +54,19 @@ while True:
     elif choice == "3":
         nutrition_menu()
     elif choice == "4":
+        pantry_items = view_pantry()
+        ingredients_list = [item[1] for item in pantry_items]
+        print(f"\nSending {len(ingredients_list)} ingredients to Gemini...")
+
+        print("\n==================================")
+        print("           CUSTOM RECIPE          ")
+        print("==================================")
+        base_recipe = find_recipes_by_ingredients(ingredients_list)
+        instructions = get_recipe_instructions(base_recipe.get("id"))
+        recipe = generate_recipe_from_pantry(ingredients_list, base_recipe, instructions)
+        print("\n")
+
+    elif choice == "5":
         print("Bye!")
         break
     else:
