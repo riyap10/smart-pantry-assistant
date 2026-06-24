@@ -44,3 +44,21 @@ def get_nutrition(ingredient_name):
         "name" : nutrition_data.get("name"),
         "nutrients" : summary
     }
+
+
+def find_recipes_by_ingredients(ingredients_list):
+    url = "https://api.spoonacular.com/recipes/findByIngredients"
+
+    params = {
+        "ingredients": ",".join(ingredients_list),
+        "number": 1,
+        "ranking": 1,
+        "apiKey": SPOONACULAR_KEY
+    }
+
+    response = requests.get(url, params=params)
+    if response.status_code == 200:
+        recipes = response.json()
+        if recipes:
+            return recipes[0]
+    return None
