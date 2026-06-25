@@ -1,11 +1,9 @@
-from database.database import create_table
-from database.database import add_ingredient
-from database.database import view_pantry
-from api.spoonacular_api import get_nutrition
-from database.database import create_recipe_table
+from database.database import create_table, add_ingredient, view_pantry, create_recipes_table, save_recipe, view_recipes
+from api.spoonacular_api import get_nutrition, find_recipes_by_ingredients, get_recipe_instructions
+from api.gemini_api import generate_recipe_from_pantry
 
 create_table()
-create_recipe_table()
+create_recipes_table()
 
 def menu():
     print("\n==================================")
@@ -25,27 +23,25 @@ def nutrition_menu():
         return
     print("Which ingredient do you want nutrition info for?")
     for i, item in enumerate(pantry_items, 1):
-        print(f"{i}, {item[1]}")
+        print(f"{i}. {item[1]}")
     selection = input("Enter number: ")
     if selection.isdigit() and 1 <= int(selection) <= len(pantry_items):
         selected = pantry_items[int(selection) - 1]
         result = get_nutrition(selected[1])
         if result:
-            print(f"\nNutrition for {result["name"]} (per 1 cup):")
+            print(f"\nNutrition for {result['name']} (per 1 cup):")
             for nutrient, value in result["nutrients"].items():
                 print(f"  {nutrient}: {value}")
     else:
         print("Invalid choice.")
 
-
-while True: 
+while True:
     menu()
     choice = input("Choice: ")
     if choice == "1":
         ingredient = input("Enter ingredient: ")
         quantity = input("Enter quantity: ")
         expiration = input("Enter expiration date (MM-DD-YYYY): ")
-
         add_ingredient(ingredient, quantity, expiration)
         print("\nIngredient added to pantry!")
     elif choice == "2":
@@ -53,12 +49,21 @@ while True:
         print("\nThis is your current pantry!")
         for item in pantry:
             print(item)
-            
     elif choice == "3":
         nutrition_menu()
     elif choice == "4":
-        print("Bye!")
-        break
+        pantry_items = view_pantry()
+        ingredients_list = [item[1] for item in pantry_items]
+        print(f"\nSending {len(ingredients_list)} ingredients to Gemini...")
+        print("\n==================================")
+        print("           CUSTOM RECIPE          ")
+        print("==================================")
+        base_recipe = find_recipes_by_ingredients(ingredients_list)
+        instructions = get_recipe_instructions(base_recipe.get("id"))
+        recipe = generate_recipe_from_pantry(ingredients_list, base_recipe, instructions)
+        print("\n")
+        save_recipe(recipe)
+        print("Recipe saved!")
     elif choice == "5":
         recipes = view_recipes()
         if not recipes:
@@ -67,6 +72,8 @@ while True:
             print("\nYour saved recipes:")
             for recipe in recipes:
                 print(f"\n[{recipe[2]}]\n{recipe[1]}")
+    elif choice == "6":
+        print("Bye!")
+        break
     else:
         print("Invalid choice.")
-
