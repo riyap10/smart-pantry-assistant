@@ -1,7 +1,7 @@
 from google import genai
 
 
-def generate_recipe_from_pantry(ingredients_list, base_recipe, instructions):
+def generate_recipe_from_pantry(ingredients_list, base_recipe, instructions, meal_type="any meal", cuisine="any cuisine", exclude="none"):    
     try:
         base_title = base_recipe.get("title", "Custom Dish")
         missed = [img.get("name") for img in base_recipe.get("missedIngredients", [])]
@@ -20,6 +20,9 @@ def generate_recipe_from_pantry(ingredients_list, base_recipe, instructions):
         prompt = f"""
         You are a chef assistant.
         We want to make a dish inspired by the recipe: "{base_title}"
+        The user wants a {meal_type} with {cuisine} cuisine.
+The user does NOT want to use these ingredients today, do not include them anywhere in the recipe: {exclude}.
+You must completely ignore and omit {exclude} from the title, ingredients list, and all steps.
         
         Here are the EXACT cooking instructions from the original recipe:
         {instructions}
@@ -36,6 +39,7 @@ def generate_recipe_from_pantry(ingredients_list, base_recipe, instructions):
                 make complete sense without the missing items.
             4. Explicitly do NOT use or list any of the missed items in your final output.
             5. Do not feel pressured to use all of the ingredients in the pantry.
+            6. Make sure the recipe fits the requested meal type and cuisine.
         
         Format the output cleanly with a Title, an Ingredients list showing what they will use, and the modified 
         numbered Steps.

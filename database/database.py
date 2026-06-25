@@ -45,7 +45,7 @@ def create_recipe_table():
     cursor = conn.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS recipes (
-            is INTEGER PRIMARY KEY AUTOINCREMENT,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             recipe_text TEXT NOT NULL,
             saved_on TEXT NOT NULL
         )

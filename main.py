@@ -1,9 +1,9 @@
-from database.database import create_table, add_ingredient, view_pantry, create_recipes_table, save_recipe, view_recipes
+from database.database import create_table, add_ingredient, view_pantry, create_recipe_table, save_recipe, view_recipes
 from api.spoonacular_api import get_nutrition, find_recipes_by_ingredients, get_recipe_instructions
 from api.gemini_api import generate_recipe_from_pantry
 
 create_table()
-create_recipes_table()
+create_recipe_table()
 
 def menu():
     print("\n==================================")
@@ -53,17 +53,36 @@ while True:
         nutrition_menu()
     elif choice == "4":
         pantry_items = view_pantry()
+        if not pantry_items:
+            print("Your pantry is empty!")
+            continue
         ingredients_list = [item[1] for item in pantry_items]
+        print("\nWhat meal type are you looking for?")
+        print("1. Breakfast")
+        print("2. Lunch")
+        print("3. Dinner")
+        meal_choice = input("Choice: ")
+        meal_map = {"1": "breakfast", "2": "lunch", "3": "dinner"}
+        meal_type = meal_map.get(meal_choice, "any meal")
+        cuisine = input("\nWhat cuisine are you in the mood for? (e.g. Indian, Italian, Chinese, or press Enter to skip): ").strip()
+        if not cuisine:
+            cuisine = "any cuisine"
+        exclude = input("\nAny ingredients you want to exclude today? (e.g. rice, eggs, or press Enter to skip): ").strip()
+        if not exclude:
+            exclude = "none"
+    
+        
         print(f"\nSending {len(ingredients_list)} ingredients to Gemini...")
         print("\n==================================")
         print("           CUSTOM RECIPE          ")
         print("==================================")
         base_recipe = find_recipes_by_ingredients(ingredients_list)
         instructions = get_recipe_instructions(base_recipe.get("id"))
-        recipe = generate_recipe_from_pantry(ingredients_list, base_recipe, instructions)
+        recipe = generate_recipe_from_pantry(ingredients_list, base_recipe, instructions, meal_type, cuisine, exclude)        
         print("\n")
         save_recipe(recipe)
         print("Recipe saved!")
+
     elif choice == "5":
         recipes = view_recipes()
         if not recipes:
