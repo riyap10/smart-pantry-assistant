@@ -2,8 +2,10 @@ from database.database import create_table
 from database.database import add_ingredient
 from database.database import view_pantry
 from api.spoonacular_api import get_nutrition
+from database.database import create_recipe_table
 
 create_table()
+create_recipe_table()
 
 def menu():
     print("\n==================================")
@@ -12,7 +14,9 @@ def menu():
     print("1. Add Ingredient")
     print("2. View Pantry")
     print("3. See Nutrition Facts")
-    print("4. Close")
+    print("4. Generate Recipe")
+    print("5. View Saved Recipes")
+    print("6. Close")
 
 def nutrition_menu():
     pantry_items = view_pantry()
@@ -32,6 +36,7 @@ def nutrition_menu():
                 print(f"  {nutrient}: {value}")
     else:
         print("Invalid choice.")
+
 
 while True: 
     menu()
@@ -54,6 +59,14 @@ while True:
     elif choice == "4":
         print("Bye!")
         break
+    elif choice == "5":
+        recipes = view_recipes()
+        if not recipes:
+            print("\nNo saved recipes yet!")
+        else:
+            print("\nYour saved recipes:")
+            for recipe in recipes:
+                print(f"\n[{recipe[2]}]\n{recipe[1]}")
     else:
         print("Invalid choice.")
 

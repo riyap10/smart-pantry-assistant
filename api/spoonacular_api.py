@@ -34,7 +34,7 @@ def get_nutrition(ingredient_name):
     nutrition_data = nutrition_response.json()
 
     nutrients = nutrition_data.get("nutrition", {}).get("nutrients", [])
-    nutrients_to_show = ["Calories", "Protein", "Carbs", "Fat", "Fiber"]
+    nutrients_to_show = ["Calories", "Protein", "Carbohydrates", "Fat", "Fiber"]
     summary = {}
     for n in nutrients:
         if n["name"] in nutrients_to_show:
