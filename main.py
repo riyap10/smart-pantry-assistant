@@ -48,7 +48,7 @@ def nutrition_menu():
         choices=[pantry_item[1] for pantry_item in pantry_items]
     ).ask()
     if selection:
-        with console.status(f"[bold cyan]Retrieving nutrition info for {selection}...[/bold cyan]"):
+        with console.status(f"Retrieving nutrition info for {selection}..."):
             result = get_nutrition(selection)
         console.clear()
         console.rule("[bold]Nutrition Facts[/bold]")
