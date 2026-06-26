@@ -1,4 +1,7 @@
 from google import genai
+from rich.console import Console
+
+console = Console()
 
 def generate_recipe_from_pantry(ingredients_list, base_recipe, instructions, meal_type="any meal", cuisine="any cuisine", exclude="none"):
     try:
@@ -59,15 +62,15 @@ def generate_recipe_from_pantry(ingredients_list, base_recipe, instructions, mea
             # print(repr(event)) # Debug
             if event.event_type == "step.delta":
                 if event.delta.type == "text":
-                    print(event.delta.text, end="", flush=True)
+                    console.print(event.delta.text, end="", markup=False)
                     full_recipe_text += event.delta.text
 
         if full_recipe_text:
             return full_recipe_text
 
     except Exception as e:
-        print(f"Error generating recipe: {str(e)}")
+        print(f"[bold red]Error generating recipe: [/bold red]{str(e)}")
         return f"Error generating recipe: {str(e)}"
 
-    print(f"\n{model} is temporarily unavailable.")
+    print(f"\n{model} [bold red]is temporarily unavailable.[/bold red]")
     return f"\n{model} is temporarily unavailable."

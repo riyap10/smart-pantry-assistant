@@ -3,7 +3,7 @@ from api.spoonacular_api import get_nutrition, find_recipes_by_ingredients, get_
 from api.gemini_api import generate_recipe_from_pantry
 
 import questionary
-from rich import print
+from rich import print, box
 from rich.table import Table
 from rich.markdown import Markdown
 from rich.console import Console
@@ -15,7 +15,7 @@ console = Console()
 
 def menu():
     console.clear()
-    console.rule("STOCKD")
+    console.rule("[bold magenta]STOCKD[/bold magenta]")
     selection = questionary.select(
         "What would you like to do?",
         choices=["Add Ingredient",
@@ -41,19 +41,19 @@ def extract_recipe_title(markdown_text):
 def nutrition_menu():
     pantry_items = view_pantry()
     if not pantry_items:
-        print("Your pantry is empty.")
+        print("[yellow]Your pantry is empty.[/yellow]")
         return
     selection = questionary.select(
         "Which ingredient do you want nutrition info for?",
         choices=[pantry_item[1] for pantry_item in pantry_items]
     ).ask()
     if selection:
-        with console.status(f"Retrieving nutrition info for {selection}..."):
+        with console.status(f"[bold cyan]Retrieving nutrition info for {selection}...[/bold cyan]"):
             result = get_nutrition(selection)
         console.clear()
-        console.rule("Nutrition Facts")
+        console.rule("[bold]Nutrition Facts[/bold]")
         if result:
-            print(f"\nNutrition for {result['name']} (per serving):")
+            print(f"\n[bold magenta]Nutrition for {result['name']}[/bold magenta] (per serving):")
             for nutrient, value in result["nutrients"].items():
                 print(f"  {nutrient}: {value}")
     else:
@@ -62,7 +62,7 @@ def nutrition_menu():
 def generate_recipe():
     pantry_items = view_pantry()
     if not pantry_items:
-        print("Your pantry is empty!")
+        print("[yellow]Your pantry is empty![/yellow]")
         return
     ingredients_list = [item[1] for item in pantry_items]
     meal_type = questionary.select(
@@ -88,7 +88,7 @@ def generate_recipe():
             print("Couldn't find a matching recipe. Try adding more ingredients!")
             return
         instructions = get_recipe_instructions(base_recipe.get("id"))
-        recipe = generate_recipe_from_pantry(ingredients_list, base_recipe, instructions, meal_type, cuisine, exclude)
+    recipe = generate_recipe_from_pantry(ingredients_list, base_recipe, instructions, meal_type, cuisine, exclude)
     print("\n")
     save_recipe(recipe)
     print("Recipe saved!")
@@ -98,7 +98,7 @@ while True:
     choice = menu()
     if choice == "Add Ingredient":
         console.clear()
-        console.rule("Add Ingredient")
+        console.rule("[bold magenta]Add Ingredient[/bold magenta]")
         ingredient = questionary.text("Enter ingredient: ").ask()
         quantity = questionary.text("Enter quantity: ").ask()
         unit = questionary.select(
@@ -111,8 +111,8 @@ while True:
     elif choice == "View Pantry":
         console.clear()
         pantry = view_pantry()
-        console.rule("Your Pantry")
-        table = Table()
+        console.rule("[bold]Your Pantry[/bold]")
+        table = Table(header_style="bold magenta", box=box.ROUNDED)
         table.add_column("Ingredient")
         table.add_column("Quantity")
         table.add_column("Unit")
@@ -123,25 +123,25 @@ while True:
         input("\nPress Enter to continue...")
     elif choice == "See Nutrition Facts":
         console.clear()
-        console.rule("Nutrition Facts")
+        console.rule("[bold magenta]Nutrition Facts[/bold magenta]")
         nutrition_menu()
         input("\nPress Enter to continue...")
     elif choice == "Generate Recipe":
         console.clear()
-        console.rule("Generate Recipe")
+        console.rule("[bold magenta]Generate Recipe[/bold magenta]")
         final_recipe = generate_recipe()
         if final_recipe:
             console.clear()
-            console.rule("Generate Recipe")
+            console.rule("[bold]Generate Recipe[/bold]")
             recipe_card = Panel(Markdown(final_recipe))
             console.print(recipe_card)
         input("\nPress Enter to continue...")
     elif choice == "View Saved Recipes":
         console.clear()
-        console.rule("Saved Recipes")
+        console.rule("[bold magenta]Saved Recipes[/bold magenta]")
         recipes = view_recipes()
         if not recipes:
-            print("\nNo saved recipes yet!")
+            print("\n[dim]No saved recipes yet![/dim]")
         else:
             recipe_map = {}
             for recipe in recipes:
@@ -156,16 +156,16 @@ while True:
             if selection == "Back to Main Menu":
                 continue
             console.clear()
-            console.rule("Saved Recipes")
+            console.rule("[bold]Saved Recipes[/bold]")
             recipe_card = Panel(Markdown(recipe_map[selection][0]))
             console.print(recipe_card)
             input("\nPress Enter to continue...")
     elif choice == "Delete Ingredient":
         console.clear()
-        console.rule("Delete Ingredient")
+        console.rule("[bold magenta]Delete Ingredient[/bold magenta]")
         pantry = view_pantry()
         if not pantry:
-            print("Your pantry is empty.")
+            print("[dim]Your pantry is empty.[/dim]")
         else:
             selection = questionary.select(
                 "Which ingredient do you want to delete?",
@@ -178,10 +178,10 @@ while True:
                 print(f"{selection} removed from pantry!")
     elif choice == "Edit Ingredient":
         console.clear()
-        console.rule("Edit Ingredient")
+        console.rule("[bold magenta]Edit Ingredient[/bold magenta]")
         pantry = view_pantry()
         if not pantry:
-            print("Your pantry is empty.")
+            print("[dim]Your pantry is empty.[/dim]")
         else:
             selection = questionary.select(
                 "Which ingredient do you want to edit?",
@@ -200,5 +200,5 @@ while True:
             print(f"{name} updated!")
     elif choice == "Close":
         console.clear()
-        print("Bye!")
+        print("[bold]Bye![/bold]")
         break
