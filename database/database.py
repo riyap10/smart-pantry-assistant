@@ -12,25 +12,47 @@ def create_table():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             ingredient TEXT NOT NULL,
             quantity INTEGER,
+            unit TEXT,
             expiration_date TEXT
         )
     """)
     conn.commit()
     conn.close()
 
-def add_ingredient(name, quantity, expiration_date):
+def add_ingredient(name, quantity, unit, expiration_date):
     conn = connect_db()
     cursor = conn.cursor()
     cursor.execute(
         """
         INSERT INTO pantry 
-        (ingredient, quantity, expiration_date) 
-        VALUES (?, ?, ?)
+        (ingredient, quantity, unit, expiration_date) 
+        VALUES (?, ?, ?, ?)
         """,
-        (name, quantity, expiration_date)
+        (name, quantity, unit, expiration_date)
     )
     conn.commit()
     conn.close() 
+  
+def delete_ingredient(ingredient_id):
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM pantry WHERE id = ?", (ingredient_id,))
+    conn.commit()
+    conn.close()
+
+def update_ingredient(ingredient_id, name, quantity, unit, expiration_date):
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        UPDATE pantry 
+        SET ingredient = ?, quantity = ?, unit = ?, expiration_date = ?
+        WHERE id = ?
+        """,
+        (name, quantity, unit, expiration_date, ingredient_id)
+    )
+    conn.commit()
+    conn.close()
 
 def view_pantry():
     conn = connect_db()

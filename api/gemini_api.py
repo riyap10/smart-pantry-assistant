@@ -16,38 +16,36 @@ def generate_recipe_from_pantry(ingredients_list, base_recipe, instructions, mea
         #print(used)
         #print(missed)
 
+        
         prompt = f"""
-        You are a chef assistant.
-        We want to make a dish inspired by the recipe: "{base_title}"
-        The user wants a {meal_type} with {cuisine} cuisine.
-The user does NOT want to use these ingredients today, do not include them anywhere in the recipe: {exclude}.
-You must completely ignore and omit {exclude} from the title, ingredients list, and all steps.
-        
-        Here are the EXACT cooking instructions from the original recipe:
-        {instructions}
-        
-        The user has ONLY these ingredients in their pantry: {ingredients_str}
-        The original recipe uses these items we HAVE: {", ".join(used)}
-        But it also requires these 'Missed Ingredients' which the user DOES NOT HAVE: {", ".join(missed)}
+          You are a chef assistant.
+          We want to make a dish inspired by the recipe: "{base_title}"
+          The user wants a {meal_type} with {cuisine} cuisine.
 
-        YOUR TASK:
-            1. Adapt the original step-by-step instructions provided above so they can be executed WITHOUT the missed
-                ingredients.
-            2. Professionally substitute or alter the steps using ONLY what is available in the user's pantry.
-            3. Keep the original core cooking techniques, temperatures, and timings, but adjust them so the directions 
-                make complete sense without the missing items.
-            4. Explicitly do NOT use or list any of the missed items in your final output.
-            5. Do not feel pressured to use all of the ingredients in the pantry.
-            6. Make sure the recipe fits the requested meal type and cuisine.
-        
-        Format the output cleanly with:
-        - A Title
-        - Yields, Prep time, and Cook time
-        - An Ingredients list with realistic quantities and measurements for each item
-        - Modified numbered Steps with detail
-        CRUCIAL FORMATTING RULE: The very first line of your response must be a standard markdown header containing ONLY the title of the dish, like this: # Name of the Dish. 
-        Do not include any greetings, introductory text, or blank lines before the title.
-        """
+          STRICT RULES - YOU MUST FOLLOW THESE:
+          1. You may ONLY use ingredients from this list: {ingredients_str}
+          2. Do NOT use any ingredient not in that list, even if the original recipe calls for it.
+          3. Do NOT use these excluded ingredients under any circumstances: {exclude}
+          4. Basic pantry staples like salt, pepper, water, and cooking oil are allowed.
+
+          Here are the original cooking instructions for inspiration only:
+          {instructions}
+
+          The original recipe used: {", ".join(used)}
+          The original recipe also needed: {", ".join(missed)} — DO NOT use these, they are not available.
+
+          YOUR TASK:
+          1. Adapt the recipe using ONLY the available ingredients listed above.
+          2. Substitute or remove any missing ingredients creatively.
+          3. Keep cooking techniques and timings similar where possible.
+          4. Make sure the recipe fits the requested meal type and cuisine.
+
+          Format the output with:
+          - A Title
+          - Yields, Prep time, and Cook time
+          - An Ingredients list with realistic quantities for each item used
+          - Numbered Steps
+          """
 
         client = genai.Client()
         stream = client.interactions.create(
