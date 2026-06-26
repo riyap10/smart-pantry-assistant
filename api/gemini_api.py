@@ -1,13 +1,12 @@
 from google import genai
 
-
-def generate_recipe_from_pantry(ingredients_list, base_recipe, instructions, meal_type="any meal", cuisine="any cuisine", exclude="none"):    
+def generate_recipe_from_pantry(ingredients_list, base_recipe, instructions, meal_type="any meal", cuisine="any cuisine", exclude="none"):
     try:
         base_title = base_recipe.get("title", "Custom Dish")
         missed = [img.get("name") for img in base_recipe.get("missedIngredients", [])]
         used = [img.get("name") for img in base_recipe.get("usedIngredients", [])]
 
-        model = "gemini-2.5-flash-lite"
+        model = "gemini-3.1-flash-lite"
 
         ingredients_str = ", ".join(ingredients_list)
 
@@ -43,6 +42,8 @@ You must completely ignore and omit {exclude} from the title, ingredients list, 
         
         Format the output cleanly with a Title, an Ingredients list showing what they will use, and the modified 
         numbered Steps.
+        CRUCIAL FORMATTING RULE: The very first line of your response must be a standard markdown header containing ONLY the title of the dish, like this: # Name of the Dish. 
+        Do not include any greetings, introductory text, or blank lines before the title.
         """
 
         client = genai.Client()

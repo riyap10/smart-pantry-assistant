@@ -2,32 +2,56 @@ from database.database import create_table, add_ingredient, view_pantry, create_
 from api.spoonacular_api import get_nutrition, find_recipes_by_ingredients, get_recipe_instructions
 from api.gemini_api import generate_recipe_from_pantry
 
+import questionary
+from rich import print
+from rich.table import Table
+from rich.markdown import Markdown
+from rich.console import Console
+from rich.panel import Panel
+
 create_table()
 create_recipe_table()
+console = Console()
 
 def menu():
-    print("\n==================================")
-    print("STOCKD")
-    print("==================================")
-    print("1. Add Ingredient")
-    print("2. View Pantry")
-    print("3. See Nutrition Facts")
-    print("4. Generate Recipe")
-    print("5. View Saved Recipes")
-    print("6. Close")
+    console.clear()
+    console.rule("STOCKD")
+    selection = questionary.select(
+        "What would you like to do?",
+        choices=["Add Ingredient",
+                 "View Pantry",
+                 "See Nutrition Facts",
+                 "Generate Recipe",
+                 "View Saved Recipes",
+                 "Close"
+        ],
+        use_shortcuts=True,
+    ).ask()
+
+    return selection
+
+def extract_recipe_title(markdown_text):
+    lines = [line.strip() for line in markdown_text.split('\n') if line.strip()]
+    if not lines:
+        return "Custom Recipe"
+
+    first_line = lines[0]
+    return first_line.lstrip('#').replace('**', '').strip()
 
 def nutrition_menu():
     pantry_items = view_pantry()
     if not pantry_items:
         print("Your pantry is empty.")
         return
-    print("Which ingredient do you want nutrition info for?")
-    for i, item in enumerate(pantry_items, 1):
-        print(f"{i}. {item[1]}")
-    selection = input("Enter number: ")
-    if selection.isdigit() and 1 <= int(selection) <= len(pantry_items):
-        selected = pantry_items[int(selection) - 1]
-        result = get_nutrition(selected[1])
+    selection = questionary.select(
+        "Which ingredient do you want nutrition info for?",
+        choices=[pantry_item[1] for pantry_item in pantry_items]
+    ).ask()
+    if selection:
+        with console.status(f"Retrieving nutrition info for {selection}..."):
+            result = get_nutrition(selection)
+        console.clear()
+        console.rule("Nutrition Facts")
         if result:
             print(f"\nNutrition for {result['name']} (per 1 cup):")
             for nutrient, value in result["nutrients"].items():
@@ -35,64 +59,116 @@ def nutrition_menu():
     else:
         print("Invalid choice.")
 
-while True:
-    menu()
-    choice = input("Choice: ")
-    if choice == "1":
-        ingredient = input("Enter ingredient: ")
-        quantity = input("Enter quantity: ")
-        expiration = input("Enter expiration date (MM-DD-YYYY): ")
-        add_ingredient(ingredient, quantity, expiration)
-        print("\nIngredient added to pantry!")
-    elif choice == "2":
-        pantry = view_pantry()
-        print("\nThis is your current pantry!")
-        for item in pantry:
-            print(item)
-    elif choice == "3":
-        nutrition_menu()
-    elif choice == "4":
-        pantry_items = view_pantry()
-        if not pantry_items:
-            print("Your pantry is empty!")
-            continue
-        ingredients_list = [item[1] for item in pantry_items]
-        print("\nWhat meal type are you looking for?")
-        print("1. Breakfast")
-        print("2. Lunch")
-        print("3. Dinner")
-        meal_choice = input("Choice: ")
-        meal_map = {"1": "breakfast", "2": "lunch", "3": "dinner"}
-        meal_type = meal_map.get(meal_choice, "any meal")
-        cuisine = input("\nWhat cuisine are you in the mood for? (e.g. Indian, Italian, Chinese, or press Enter to skip): ").strip()
-        if not cuisine:
-            cuisine = "any cuisine"
-        exclude = input("\nAny ingredients you want to exclude today? (e.g. rice, eggs, or press Enter to skip): ").strip()
-        if not exclude:
-            exclude = "none"
-    
-        
-        print(f"\nSending {len(ingredients_list)} ingredients to Gemini...")
-        print("\n==================================")
-        print("           CUSTOM RECIPE          ")
-        print("==================================")
+def generate_recipe():
+    pantry_items = view_pantry()
+    if not pantry_items:
+        print("Your pantry is empty!")
+        return
+    ingredients_list = [item[1] for item in pantry_items]
+    meal_type = questionary.select(
+        "\nWhat meal type are you looking for?",
+        choices=["Breakfast",
+                 "Lunch",
+                 "Dinner",
+                 "any meal"
+        ],
+        use_shortcuts=True,
+        default="any meal"
+    ).ask()
+    cuisine = questionary.text(
+        "\nWhat cuisine are you in the mood for? (e.g. Indian, Italian, Chinese, or press Enter to skip): "
+    ).ask()
+    if not cuisine:
+        cuisine = "any cuisine"
+    exclude = questionary.checkbox(
+        "\nAny ingredients you want to exclude today? (e.g. rice, eggs, or press Enter to skip): ",
+        choices=[pantry_item[1] for pantry_item in pantry_items]
+    ).ask()
+    if not exclude:
+        exclude = "none"
+
+    with console.status(f"Sending {len(ingredients_list)} ingredients to Gemini..."):
         base_recipe = find_recipes_by_ingredients(ingredients_list)
         instructions = get_recipe_instructions(base_recipe.get("id"))
-        recipe = generate_recipe_from_pantry(ingredients_list, base_recipe, instructions, meal_type, cuisine, exclude)        
-        print("\n")
-        save_recipe(recipe)
-        print("Recipe saved!")
+        recipe = generate_recipe_from_pantry(ingredients_list, base_recipe, instructions, meal_type, cuisine, exclude)
+    print("\n")
+    save_recipe(recipe)
+    print("Recipe saved!")
+    return recipe
 
-    elif choice == "5":
+while True:
+    choice = menu()
+    if choice == "Add Ingredient":
+        console.clear()
+        console.rule("Add Ingredient")
+        ingredient = questionary.text("Enter ingredient: ").ask()
+        quantity = questionary.text("Enter quantity: ").ask()
+        expiration = questionary.text("Enter expiration date (MM-DD-YYYY): ").ask()
+        add_ingredient(ingredient, quantity, expiration)
+        print("\nIngredient added to pantry!")
+    elif choice == "View Pantry":
+        console.clear()
+        pantry = view_pantry()
+        console.rule("Your Pantry")
+        table = Table()
+        table.add_column("Ingredient")
+        table.add_column("Quantity")
+        table.add_column("Expiration Date")
+        for item in pantry:
+            table.add_row(item[1], str(item[2]), item[3])
+        print(table)
+        input("\nPress Enter to continue...")
+    elif choice == "See Nutrition Facts":
+        console.clear()
+        console.rule("Nutrition Facts")
+        nutrition_menu()
+        input("\nPress Enter to continue...")
+    elif choice == "Generate Recipe":
+        console.clear()
+        console.rule("Generate Recipe")
+        final_recipe = generate_recipe()
+        if final_recipe:
+            console.clear()
+            console.rule("Generate Recipe")
+            recipe_card = Panel(
+                Markdown(final_recipe)
+            )
+
+            console.print(recipe_card)
+        input("\nPress Enter to continue...")
+
+    elif choice == "View Saved Recipes":
+        console.clear()
+        console.rule("Saved Recipes")
         recipes = view_recipes()
         if not recipes:
             print("\nNo saved recipes yet!")
         else:
-            print("\nYour saved recipes:")
+            recipe_map = {}
             for recipe in recipes:
-                print(f"\n[{recipe[2]}]\n{recipe[1]}")
-    elif choice == "6":
+                recipe_text = recipe[1]
+                saved_on = recipe[2]
+                recipe_title = extract_recipe_title(recipe_text)
+                recipe_map[recipe_title] = (recipe_text, saved_on)
+
+            selection = questionary.select(
+                "Which recipe would you like to open?",
+                choices=list(recipe_map.keys()) + ["Back to Main Menu"]
+            ).ask()
+
+            if selection == "Back to Main Menu":
+                continue
+
+            console.clear()
+            console.rule("Saved Recipes")
+
+            recipe_card = Panel(
+                Markdown(recipe_map[selection][0])
+            )
+
+            console.print(recipe_card)
+            input("\nPress Enter to continue...")
+    elif choice == "Close":
+        console.clear()
         print("Bye!")
         break
-    else:
-        print("Invalid choice.")
