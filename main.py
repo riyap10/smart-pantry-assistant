@@ -53,7 +53,7 @@ def nutrition_menu():
         console.clear()
         console.rule("Nutrition Facts")
         if result:
-            print(f"\nNutrition for {result['name']} (per 1 cup):")
+            print(f"\nNutrition for {result['name']} (per serving):")
             for nutrient, value in result["nutrients"].items():
                 print(f"  {nutrient}: {value}")
     else:
@@ -70,10 +70,10 @@ def generate_recipe():
         choices=["Breakfast",
                  "Lunch",
                  "Dinner",
-                 "any meal"
+                 "Any meal"
         ],
         use_shortcuts=True,
-        default="any meal"
+        default="Any meal"
     ).ask()
     cuisine = questionary.text(
         "\nWhat cuisine are you in the mood for? (e.g. Indian, Italian, Chinese, or press Enter to skip): "
@@ -86,9 +86,13 @@ def generate_recipe():
     ).ask()
     if not exclude:
         exclude = "none"
-
+  
     with console.status(f"Sending {len(ingredients_list)} ingredients to Gemini..."):
         base_recipe = find_recipes_by_ingredients(ingredients_list)
+        if not base_recipe:
+          print("Couldn't find a matching recipe. Try adding more ingredients!")
+          return
+        instructions = get_recipe_instructions(base_recipe.get("id"))
         instructions = get_recipe_instructions(base_recipe.get("id"))
         recipe = generate_recipe_from_pantry(ingredients_list, base_recipe, instructions, meal_type, cuisine, exclude)
     print("\n")

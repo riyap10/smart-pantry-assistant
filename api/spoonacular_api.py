@@ -26,7 +26,7 @@ def get_nutrition(ingredient_name):
     nutrition_url = f"https://api.spoonacular.com/food/ingredients/{ingredient_id}/information"
     nutrition_params = {
         "amount" : 1, 
-        "unit" : "cup",
+        "unit" : "serving",
         "apiKey" : SPOONACULAR_KEY
     }
 

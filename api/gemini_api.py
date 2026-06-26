@@ -40,8 +40,11 @@ You must completely ignore and omit {exclude} from the title, ingredients list, 
             5. Do not feel pressured to use all of the ingredients in the pantry.
             6. Make sure the recipe fits the requested meal type and cuisine.
         
-        Format the output cleanly with a Title, an Ingredients list showing what they will use, and the modified 
-        numbered Steps.
+        Format the output cleanly with:
+        - A Title
+        - Yields, Prep time, and Cook time
+        - An Ingredients list with realistic quantities and measurements for each item
+        - Modified numbered Steps with detail
         CRUCIAL FORMATTING RULE: The very first line of your response must be a standard markdown header containing ONLY the title of the dish, like this: # Name of the Dish. 
         Do not include any greetings, introductory text, or blank lines before the title.
         """
